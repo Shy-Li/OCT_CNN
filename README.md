@@ -11,11 +11,15 @@ A custormized ResNet model for OCT colorectal image classification.
 ## Background
 
 ## Install
-The code was tested on Python 3.8.8 and TensorFlow 2.4.1.
+The code was tested with Python 3.8.8 and TensorFlow 2.4.1.
 
 Required packages: 
 
-tensorflow-gpu; numpy; pandas; matplotlib; pillow
+ - tensorflow-gpu
+ - numpy
+ - pandas
+ - matplotlib
+ - pillow
 
 ## Usage
 
