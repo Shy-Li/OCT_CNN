@@ -21,7 +21,6 @@ train_ds1 = tf.keras.preprocessing.image_dataset_from_directory(
     batch_size=batch_size,
     color_mode="grayscale",
 )
-
 train_ds2 = tf.keras.preprocessing.image_dataset_from_directory(
     "Catheter_cropped_512/training",
     seed=1337,
@@ -48,8 +47,6 @@ val_ds2 = tf.keras.preprocessing.image_dataset_from_directory(
 )
 
 val_ds = val_ds1.concatenate(val_ds2)
-sum1 = 0
-
 
 def make_model(input_shape, num_classes):
     inputs = keras.Input(shape=input_shape)
@@ -60,26 +57,24 @@ def make_model(input_shape, num_classes):
 
     previous_block_activation = x  # Set aside residual
 
-    for size in [8,16,32,64]:
+    for size in [8,16,32,64]: # residual blocks
         x = layers.Activation("relu")(x)
         x = layers.SeparableConv2D(size, 3, padding="same",kernel_regularizer=regularizer)(x)
-
         x = layers.Activation("relu")(x)
         x = layers.SeparableConv2D(size, 3, padding="same",kernel_regularizer=regularizer)(x)
-
         x = layers.MaxPooling2D(3, strides=2, padding="same")(x)
 
         # Project residual
         residual = layers.Conv2D(size, 1, strides=2, padding="same",kernel_regularizer=regularizer)(
             previous_block_activation
-        )
+            )
         x = layers.add([x, residual])  # Add back residual
         previous_block_activation = x  # Set aside next residual
 
     x = layers.SeparableConv2D(128, 3, padding="same",kernel_regularizer=regularizer)(x)
     x = layers.Activation("relu")(x)
-
     x = layers.GlobalAveragePooling2D()(x)
+    
     if num_classes == 2:
         activation = "sigmoid"
         units = 1
@@ -96,9 +91,9 @@ model = make_model(input_shape=image_size + (1,), num_classes=2)
 # keras.utils.plot_model(model, show_shapes=True)
 
 epochs = 200
-isFile = os.path.isdir('models/models_train_on_both3') 
+isFile = os.path.isdir('models/models_train_on_both2') 
 if isFile == False:
-    os.mkdir('models/models_train_on_both3')
+    os.mkdir('models/models_train_on_both2')
 reduce_lr = keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.2,
                               patience=5, min_lr=1e-8)
 earlyStopping = keras.callbacks.EarlyStopping(
@@ -108,13 +103,14 @@ earlyStopping = keras.callbacks.EarlyStopping(
     verbose=0,
     mode="auto",
     baseline=None,
-    restore_best_weights=False,)
+    restore_best_weights=False,
+    )
 mcp_save = keras.callbacks.ModelCheckpoint(
-    "models/models_train_on_both3/save_at_{epoch}.h5", 
-                                           save_best_only=False, 
-                                           monitor='val_loss', 
-                                           mode='min'
-                                           )
+    "models/models_train_on_both2/save_at_{epoch}.h5", 
+    save_best_only=False, 
+    monitor='val_loss', 
+    mode='min'
+    )
 
 model.compile(
     optimizer=keras.optimizers.Adam(5e-5),
@@ -122,7 +118,7 @@ model.compile(
     metrics=keras.metrics.AUC(),
 )
 
-# class weight
+# calculate class weight
 neg = len(glob.glob("Bench_Train_Cropped_1.5e6_512/Cancer/*.png"))\
     + len(glob.glob("Catheter_cropped_512/training/Cancer/*.png"))
 pos =  len(glob.glob("Bench_Train_Cropped_1.5e6_512/Normal/*.png"))\
@@ -136,12 +132,12 @@ class_weight = {0: weight_for_0, 1: weight_for_1}
 history = model.fit(
     train_ds, epochs=epochs, 
     callbacks=[earlyStopping,mcp_save,reduce_lr], 
-        validation_data=val_ds, 
-        class_weight=class_weight
+    validation_data=val_ds, 
+    class_weight=class_weight
     )
 
 # convert the history.history dict to a pandas DataFrame:     
 hist_df = pd.DataFrame(history.history) 
 
-with open('both3.csv', mode='w') as f:
+with open('both2.csv', mode='w') as f:
     hist_df.to_csv(f)
