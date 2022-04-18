@@ -29,8 +29,8 @@ On Whitaker 160 ORIGIN GPU PC, use the enviroment OCT NN: 'conda activate OCTNN'
 Use `train.py` to train the ResNet. The training dataset and validation dataset contains both bechtop and catheter images. 
 The pre-trained networks can be found in the folder 'models/models_train_on_both2'. 
 ## Testing
-Use 'plot_prob.py' to plot prediction scores on all testing images.
-Use 'test_result.py' to average over B-scan images, plot ROC, and calculate AUC.
+Use `plot_prob.py` to plot prediction scores on all testing images.
+Use `test_result.py` to average over B-scan images, plot ROC, and calculate AUC.
  
 ## Citation
 Luo H, Li S, Zeng Y, Cheema H, Otegbeye E, Ahmed S, Chapman WC Jr, Mutch M, Zhou C, Zhu Q. Human colorectal cancer tissue assessment using optical coherence tomography catheter and deep learning. J Biophotonics. 2022 Feb 11:e202100349. doi: 10.1002/jbio.202100349. Epub ahead of print. PMID: 35150067.
