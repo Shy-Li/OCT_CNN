@@ -14,6 +14,7 @@ image_size = (256,128)
 batch_size = 32
 regularizer = tf.keras.regularizers.L2(1e-5)
 
+####################### data ###########################    
 train_ds1 = tf.keras.preprocessing.image_dataset_from_directory(
     "Bench_Train_Cropped_1.5e6_512",
     seed=1337,
@@ -47,6 +48,7 @@ val_ds2 = tf.keras.preprocessing.image_dataset_from_directory(
 )
 
 val_ds = val_ds1.concatenate(val_ds2)
+###########################################################
 
 def make_model(input_shape, num_classes):
     inputs = keras.Input(shape=input_shape)
@@ -94,8 +96,11 @@ epochs = 200
 isFile = os.path.isdir('models/models_train_on_both2') 
 if isFile == False:
     os.mkdir('models/models_train_on_both2')
+
+#################### callbacks ###########################    
+# reduce learning rate if val_loss does not decrease
 reduce_lr = keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.2,
-                              patience=5, min_lr=1e-8)
+                              patience=5, min_lr=1e-8) 
 earlyStopping = keras.callbacks.EarlyStopping(
     monitor='val_loss',
     min_delta=0,
@@ -103,14 +108,15 @@ earlyStopping = keras.callbacks.EarlyStopping(
     verbose=0,
     mode="auto",
     baseline=None,
-    restore_best_weights=False,
+    restore_best_weights=False, # I saved all models so I set this to False. 
     )
 mcp_save = keras.callbacks.ModelCheckpoint(
     "models/models_train_on_both2/save_at_{epoch}.h5", 
-    save_best_only=False, 
+    save_best_only=False, # I saved all models so I set this to False. 
     monitor='val_loss', 
     mode='min'
     )
+###########################################################
 
 model.compile(
     optimizer=keras.optimizers.Adam(5e-5),
@@ -118,13 +124,13 @@ model.compile(
     metrics=keras.metrics.AUC(),
 )
 
-# calculate class weight
+# calculate class weight according to the number of images in each class
 neg = len(glob.glob("Bench_Train_Cropped_1.5e6_512/Cancer/*.png"))\
-    + len(glob.glob("Catheter_cropped_512/training/Cancer/*.png"))
+    + len(glob.glob("Catheter_cropped_512/training/Cancer/*.png")) # label 0
 pos =  len(glob.glob("Bench_Train_Cropped_1.5e6_512/Normal/*.png"))\
-    + len(glob.glob("Catheter_cropped_512/training/Normal/*.png"))
+    + len(glob.glob("Catheter_cropped_512/training/Normal/*.png")) # label 1
 total = neg + pos
-weight_for_0 = (1 / neg) * (total / 2.0)
+weight_for_0 = (1 / neg) * (total / 2.0) # balanced dataset has class weight of 1 for both classes
 weight_for_1 = (1 / pos) * (total / 2.0)
 class_weight = {0: weight_for_0, 1: weight_for_1}
 
@@ -138,6 +144,5 @@ history = model.fit(
 
 # convert the history.history dict to a pandas DataFrame:     
 hist_df = pd.DataFrame(history.history) 
-
-with open('both2.csv', mode='w') as f:
+with open('both2_hist.csv', mode='w') as f:
     hist_df.to_csv(f)
