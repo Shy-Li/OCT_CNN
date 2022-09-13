@@ -53,7 +53,6 @@ val_ds = val_ds1.concatenate(val_ds2)
 def make_model(input_shape, num_classes):
     inputs = keras.Input(shape=input_shape)
     # Entry block
-    x = layers.experimental.preprocessing.Normalization()(inputs)
     x = layers.Conv2D(4, 3, strides=2, padding="same",kernel_regularizer=regularizer)(x)
     x = layers.Activation("relu")(x)
 
